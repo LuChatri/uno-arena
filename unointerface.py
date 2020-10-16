@@ -12,17 +12,18 @@ class UnoInterface(cmd.Cmd):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        _load_parser = argparse.ArgumentParser(description=do_load.__doc__, prog='load')
-        _load_parser.add_argument('command', help='Command to instantiate the engine.')
-        _load_parser.add_argument(['-n', '--name'], help='Name for the engine instance.')
-
-        _config_parser = argparse.ArgumentParser(description=do_config.__doc__, prog='config')
-
-        _unload_parser = argparse.ArgumentParser(description=do_unload.__doc__, prog='unload')
-        _unload_parser.add_argument(['-n', '--name'], help='Name for the instance to unload.')
-
-        _tournament_parser = argparse.ArgumentParser(description=do_tournament.__doc__, prog='tournament')
         self.engines = {}
+        
+        self._load_parser = argparse.ArgumentParser(description=self.do_load.__doc__, prog='load')
+        self._load_parser.add_argument('command', help='Command to instantiate the engine.')
+        self._load_parser.add_argument(['-n', '--name'], help='Name for the engine instance.')
+
+        self._config_parser = argparse.ArgumentParser(description=self.do_config.__doc__, prog='config')
+
+        self_unload_parser = argparse.ArgumentParser(description=self.do_unload.__doc__, prog='unload')
+        self_unload_parser.add_argument(['-n', '--name'], help='Name for the instance to unload.')
+
+        self_tournament_parser = argparse.ArgumentParser(description=selfdo_tournament.__doc__, prog='tournament')
 
 
     def do_load(self, arg):
