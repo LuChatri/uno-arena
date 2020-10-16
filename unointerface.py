@@ -16,14 +16,14 @@ class UnoInterface(cmd.Cmd):
         
         self._load_parser = argparse.ArgumentParser(description=self.do_load.__doc__, prog='load')
         self._load_parser.add_argument('command', help='Command to instantiate the engine.')
-        self._load_parser.add_argument(['-n', '--name'], help='Name for the engine instance.')
+        self._load_parser.add_argument('-n', '--name', help='Name for the engine instance.')
 
         self._config_parser = argparse.ArgumentParser(description=self.do_config.__doc__, prog='config')
 
-        self_unload_parser = argparse.ArgumentParser(description=self.do_unload.__doc__, prog='unload')
-        self_unload_parser.add_argument(['-n', '--name'], help='Name for the instance to unload.')
+        self._unload_parser = argparse.ArgumentParser(description=self.do_unload.__doc__, prog='unload')
+        self._unload_parser.add_argument('-n', '--name', help='Name for the instance to unload.')
 
-        self_tournament_parser = argparse.ArgumentParser(description=selfdo_tournament.__doc__, prog='tournament')
+        self._tournament_parser = argparse.ArgumentParser(description=self.do_tournament.__doc__, prog='tournament')
 
 
     def do_load(self, arg):
@@ -64,6 +64,5 @@ class UnoInterface(cmd.Cmd):
 
 
 if __name__ == '__main__':
-    pass
-    #ui = UnoInterface()
+    ui = UnoInterface()
     #ui.cmdloop()
