@@ -10,6 +10,21 @@ class UnoInterface(cmd.Cmd):
     prompt = '>'
 
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        _load_parser = argparse.ArgumentParser(description=do_load.__doc__, prog='load')
+        _load_parser.add_argument('command', help='Command to instantiate the engine.')
+        _load_parser.add_argument(['-n', '--name'], help='Name for the engine instance.')
+
+        _config_parser = argparse.ArgumentParser(description=do_config.__doc__, prog='config')
+
+        _unload_parser = argparse.ArgumentParser(description=do_unload.__doc__, prog='unload')
+        _unload_parser.add_argument(['-n', '--name'], help='Name for the instance to unload.')
+
+        _tournament_parser = argparse.ArgumentParser(description=do_tournament.__doc__, prog='tournament')
+        self.engines = {}
+
+
     def do_load(self, arg):
         """Add an engine instance for the next tournament.
 
@@ -36,22 +51,9 @@ class UnoInterface(cmd.Cmd):
         pass
 
 
-    def do_quit(self, arg):
+    def do_quit(self):
         """Stop engines and exit the shell."""
         pass
-
-
-    _load_parser = argparse.ArgumentParser(description=do_load.__doc__, prog='load')
-    _load_parser.add_argument('command', help='Command to instantiate the engine.')
-    _load_parser.add_argument(['-n', '--name'], help='Name for the engine instance.')
-
-    _config_parser = argparse.ArgumentParser(description=do_config.__doc__, prog='config')
-
-    _unload_parser = argparse.ArgumentParser(description=do_unload.__doc__, prog='unload')
-    _unload_parser.add_argument(['-n', '--name'], help='Name for the instance to unload.')
-
-    _tournament_parser = argparse.ArgumentParser(description=do_tournament.__doc__, prog='tournament')
-
 
     def help_load(self): self._load_parser.print_help()
     def help_config(self): self._config_parser.print_help()
@@ -61,7 +63,6 @@ class UnoInterface(cmd.Cmd):
 
 
 if __name__ == '__main__':
-    print(UnoInterface.__dict__)
     pass
-##    ui = UnoInterface()
-##    ui.cmdloop()
+    #ui = UnoInterface()
+    #ui.cmdloop()
