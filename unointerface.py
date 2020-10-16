@@ -49,6 +49,9 @@ class UnoInterface(Cmd):
         p.stdin.write(protocol.PING)
         if tsr.read(timeout=args.timeout) != protocol.OK:
             print('Engine did not reply OK')
+            # If the program hangs during testing, look for bugs here.
+            p.kill()
+            tsr.join()
             return
         else:
             self.engines[args.name] = (p, tsr)
