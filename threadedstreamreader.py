@@ -4,7 +4,7 @@ from threading import Thread
 from queue import Queue
 
 
-class ThreadedStreamReader(Thread):
+class Threaded_Stream_Reader(Thread):
     """Non-blocking stream reader based on threading.Thread.
 
     Credit to Eyal Arubas at https://gist.github.com/EyalAr/7915597
