@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 
-import argparse
-import cmd
+import protocol
+from threadedstreamreader import ThreadedStreamReader
+from argparse import ArgumentParser
+from cmd import Cmd
+from subprocess import Popen, PIPE
 
 
-class UnoInterface(cmd.Cmd):
+class UnoInterface(Cmd):
 
     intro = 'Welcome to the Uno Arena shell.  Type help or ? for more info.  Type quit to exit the shell.\n'
     prompt = '>'
@@ -14,24 +17,42 @@ class UnoInterface(cmd.Cmd):
         super().__init__(*args, **kwargs)
         self.engines = {}
         
-        self._load_parser = argparse.ArgumentParser(description=self.do_load.__doc__, prog='load')
+        self._load_parser = ArgumentParser(description=self.do_load.__doc__, prog='load')
         self._load_parser.add_argument('command', help='Command to instantiate the engine.')
         self._load_parser.add_argument('-n', '--name', help='Name for the engine instance.')
+        self._load_parser.add_argument('-t', '--timeout', help='Max time to wait for boot up.', type=float, default=5)
 
-        self._config_parser = argparse.ArgumentParser(description=self.do_config.__doc__, prog='config')
+        self._config_parser = ArgumentParser(description=self.do_config.__doc__, prog='config')
 
-        self._unload_parser = argparse.ArgumentParser(description=self.do_unload.__doc__, prog='unload')
+        self._unload_parser = ArgumentParser(description=self.do_unload.__doc__, prog='unload')
         self._unload_parser.add_argument('-n', '--name', help='Name for the instance to unload.')
 
-        self._tournament_parser = argparse.ArgumentParser(description=self.do_tournament.__doc__, prog='tournament')
+        self._tournament_parser = ArgumentParser(description=self.do_tournament.__doc__, prog='tournament')
 
 
     def do_load(self, arg):
         """Add an engine instance for the next tournament.
 
-        Command Line Example: load "python3 engine.py" myengine
+        Command Line Example: load "python3 engine.py --no-gui" myengine
         """
-        pass
+        try:
+            args = self._load_parser(arg.split())
+        except SystemExit:
+            return
+
+        p = subprocess.Popen(args.command, shell=True,
+                             stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        tsr = ThreadedStreamReader(p.stdout)
+        tsr.start()
+        
+        # Ping the engine
+        p.stdin.write(protocol.PING)
+        if tsr.read(timeout=args.timeout) != protocol.OK:
+            print('Engine did not reply OK')
+            return
+        else:
+            self.engines[args.name] = (p, tsr)
+        
 
 
     def do_config(self, arg):
@@ -56,6 +77,7 @@ class UnoInterface(cmd.Cmd):
         """Stop engines and exit the shell."""
         pass
 
+
     def help_load(self): self._load_parser.print_help()
     def help_config(self): self._config_parser.print_help()
     def help_unload(self): self._unload_parser.print_help()
@@ -65,4 +87,4 @@ class UnoInterface(cmd.Cmd):
 
 if __name__ == '__main__':
     ui = UnoInterface()
-    #ui.cmdloop()
+    ui.cmdloop()
