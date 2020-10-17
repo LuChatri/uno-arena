@@ -4,7 +4,62 @@ import protocol
 from threadedstreamreader import ThreadedStreamReader
 from argparse import ArgumentParser
 from cmd import Cmd
+from queue import Empty
 from subprocess import Popen, PIPE
+from time import sleep
+
+
+class Engine:
+
+    def __init__(self, name, command):
+        self.name = name
+        self._process = subprocess.Popen(args.command, shell=True,
+                                        stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        self._reader = ThreadedStreamReader(self.process.stdout)
+
+
+    def is_alive(self):
+        return self._process.poll() is None
+
+
+    def start(self):
+        self._reader.start()
+
+
+    def finish(self):
+        if self.is_alive()
+            self.write(protocol.SHUTDOWN)
+            sleep(5)
+            self._process.kill()
+
+        if self._reader.is_alive():
+            self._reader.join()
+
+
+    def write(self, msg):
+        if self.is_alive():
+            self._process.write(msg)
+            return True
+        return False
+
+
+    def read(self, timeout=None):
+        if self.is_alive():
+            try:
+                return self._reader.read(timeout)
+            except Empty:
+                return ''
+        return False
+
+
+    def ping(self, timeout=None):
+        self.write(protocol.PING)
+        return self.read(timeout)
+
+
+    def __del__(self):
+        self.finish()
+        super().__del__()
 
 
 class UnoInterface(Cmd):
@@ -15,7 +70,7 @@ class UnoInterface(Cmd):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.engines = {}
+        self.engines = []
         
         self._load_parser = ArgumentParser(description=self.do_load.__doc__, prog='load')
         self._load_parser.add_argument('command', help='Command to instantiate the engine.')
@@ -41,19 +96,14 @@ class UnoInterface(Cmd):
         except SystemExit:
             return
 
-        p = subprocess.Popen(args.command, shell=True,
-                             stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        tsr = ThreadedStreamReader(p.stdout)
-        tsr.start()
-        
-        # Ping the engine
-        p.stdin.write(protocol.PING)
-        if tsr.read(timeout=args.timeout) != protocol.OK:
-            print('Timed out.  Shutting down {}'.format(args.name))
-            self._shut_down_engine(p, tsr, 5)
-            return
+        e = Engine(args.name, args.command)
+        e.start()
+
+        if e.ping(args.timeout) != protocol.OK:
+            print('Cannot start {}'.format(args.name))
+            e.finish()
         else:
-            self.engines[args.name] = (p, tsr)
+            self.engines.append(e)
         
 
     def do_config(self, arg):
@@ -71,14 +121,14 @@ class UnoInterface(Cmd):
         except SystemExit:
             return
 
-        name = args.name
-        try:
-            process, reader = self.engines[name]
-        except KeyError:
-            print('Engine {} not found'.format(name))
+        for e in self.engines:
+            if e.name == args.name:
+                print('Stopping {}'.format(e.name))
+                e.finish()
+                self.engines.remove(e)
+                break
         else:
-            del self.engines[name]
-            self._shut_down_engine(process, reader, 5)
+            print('Cannot find {}'.format(args.name))
 
 
     def do_tournament(self, arg):
@@ -88,21 +138,10 @@ class UnoInterface(Cmd):
 
     def do_quit(self):
         """Stop engines and exit the shell."""
-        print('Shutting down engines...')
-        for name, (process, reader) in self.engines.items():
-            print('Shutting down {}'.format(name))
-            self._shut_down_engine(process, reader, 5)
+        for e in self.engines:
+            print('Stopping {}'.format(e.name))
+            e.finish()
         self.close()
-
-
-    def _shut_down_engine(self, process, reader, timeout):
-        # Tell engine to shut down.
-        process.stdin.write(protocol.SHUTDOWN)
-        # Give time to shut down cleanly.
-        reader.read(timeout=timeout)
-        # Force the issue
-        process.kill()
-        reader.join()
 
 
     def help_load(self): self._load_parser.print_help()
