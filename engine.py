@@ -16,7 +16,6 @@ class Engine:
     Args:
         name: an identifier for the engine
         command (str): shell initialization command for engine
-
     """
 
     def __init__(self, name, command: str):

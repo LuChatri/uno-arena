@@ -35,6 +35,10 @@ class UnoInterface(Cmd):
 
         Command Line Example: load "python3 engine.py --no-gui" myengine
         """
+        if len(self.engines) >= 15:
+            print('There must be 2-15 players')
+            return
+        
         try:
             args = self._load_parser(arg.split())
         except SystemExit:
@@ -74,8 +78,11 @@ class UnoInterface(Cmd):
 
 
     def do_tournament(self, arg):
-        """Simulate a tournament between all loaded engine instances.  WIP"""
-        pass
+        """Simulate a tournament between all loaded engine instances."""
+        if not 2 <= len(self.engines) <= 15:
+            print('There must be 2-15 players')
+            return
+        # Begin game logic here
 
 
     def do_quit(self):
