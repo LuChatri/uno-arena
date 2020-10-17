@@ -41,11 +41,9 @@ class UnoInterface(Cmd):
             return
 
         e = Engine(args.name, args.command)
-        e.start()
-
         if e.ping(args.timeout) != protocol.OK:
             print('Cannot start {}'.format(args.name))
-            e.finish()
+            e.stop()
         else:
             self.engines.append(e)
         
@@ -68,7 +66,7 @@ class UnoInterface(Cmd):
         for e in self.engines:
             if e.name == args.name:
                 print('Stopping {}'.format(e.name))
-                e.finish()
+                e.stop()
                 self.engines.remove(e)
                 break
         else:
@@ -84,7 +82,7 @@ class UnoInterface(Cmd):
         """Stop engines and exit the shell."""
         for e in self.engines:
             print('Stopping {}'.format(e.name))
-            e.finish()
+            e.stop()
         self.close()
 
 
