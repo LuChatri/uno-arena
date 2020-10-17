@@ -8,3 +8,7 @@ Messages must end in newlines.  Any unexpected messages should be ignored.
 # The engine must reply OK or it will be shut down.
 PING = 'PING\n'
 OK = 'OK\n'
+
+# Tells the engine to shut down cleanly.  It has 5 seconds
+# before a hard shutdown occurs.
+SHUTDOWN = 'SHUTDOWN\n'
