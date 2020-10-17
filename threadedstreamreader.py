@@ -28,10 +28,9 @@ class ThreadedStreamReader(Thread):
     def run(self):
         while True:
             line = self._stream.readline()
-            if line:
-                self._queue.put(line)
-            else:
+            if not line:
                 break
+            self._queue.put(line)
 
 
     def read(self, timeout=None: float) -> str:

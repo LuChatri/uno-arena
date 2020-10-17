@@ -26,6 +26,7 @@ class UnoInterface(Cmd):
 
         self._unload_parser = ArgumentParser(description=self.do_unload.__doc__, prog='unload')
         self._unload_parser.add_argument('-n', '--name', help='Name for the instance to unload.')
+        self._unload_parser.add_argument('-t', '--timeout', help='Max time to wait for shutdown', type=float, default=5)
 
         self._tournament_parser = ArgumentParser(description=self.do_tournament.__doc__, prog='tournament')
 
@@ -48,15 +49,12 @@ class UnoInterface(Cmd):
         # Ping the engine
         p.stdin.write(protocol.PING)
         if tsr.read(timeout=args.timeout) != protocol.OK:
-            print('Engine did not reply OK')
-            # If the program hangs during testing, look for bugs here.
-            p.kill()
-            tsr.join()
+            print('Timed out.  Shutting down {}'.format(args.name))
+            self._shut_down_engine(p, tsr, 5)
             return
         else:
             self.engines[args.name] = (p, tsr)
         
-
 
     def do_config(self, arg):
         """Change settings for a loaded engine instance.  WIP"""
@@ -68,7 +66,19 @@ class UnoInterface(Cmd):
 
         Command Line Example: unload myengine
         """
-        pass
+        try:
+            args = self._unload_parser(arg.split())
+        except SystemExit:
+            return
+
+        name = args.name
+        try:
+            process, reader = self.engines[name]
+        except KeyError:
+            print('Engine {} not found'.format(name))
+        else:
+            del self.engines[name]
+            self._shut_down_engine(process, reader, 5)
 
 
     def do_tournament(self, arg):
@@ -78,7 +88,21 @@ class UnoInterface(Cmd):
 
     def do_quit(self):
         """Stop engines and exit the shell."""
-        pass
+        print('Shutting down engines...')
+        for name, (process, reader) in self.engines.items():
+            print('Shutting down {}'.format(name))
+            self._shut_down_engine(process, reader, 5)
+        self.close()
+
+
+    def _shut_down_engine(self, process, reader, timeout):
+        # Tell engine to shut down.
+        process.stdin.write(protocol.SHUTDOWN)
+        # Give time to shut down cleanly.
+        reader.read(timeout=timeout)
+        # Force the issue
+        process.kill()
+        reader.join()
 
 
     def help_load(self): self._load_parser.print_help()
