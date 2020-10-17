@@ -81,7 +81,7 @@ class Engine:
         return False
 
 
-    def ping(self, timeout=None):
+    def ping(self, timeout=None) -> bool:
         """Check that the engine responds OK to a ping."""
         if (not self.write(protocol.PING))
         or (self.read(timeout) != protocol.OK):
