@@ -41,11 +41,11 @@ class UnoInterface(Cmd):
             return
 
         e = Engine(args.name, args.command)
-        if e.ping(args.timeout) != protocol.OK:
+        if e.ping(args.timeout):
+            self.engines.append(e)
+        else:
             print('Cannot start {}'.format(args.name))
             e.stop()
-        else:
-            self.engines.append(e)
         
 
     def do_config(self, arg):

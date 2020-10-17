@@ -10,6 +10,9 @@ from time import sleep
 class Engine:
     """An engine instance.
 
+    Attrs:
+        name: an identifier for the engine
+
     Args:
         name: an identifier for the engine
         command (str): shell initialization command for engine
@@ -46,8 +49,13 @@ class Engine:
             self._reader.join()
 
 
-    def write(self, msg):
-        """Write a message to the engine."""
+    def write(self, msg) -> bool:
+        """Write a message to the engine.
+
+        Note:
+            Returns True if the write was successful and False or an exception
+            otherwise.
+        """
         if self.is_alive():
             self._process.write(msg)
             return True
@@ -74,9 +82,11 @@ class Engine:
 
 
     def ping(self, timeout=None):
-        """Send a ping message and read the response."""
-        self.write(protocol.PING)
-        return self.read(timeout)
+        """Check that the engine responds OK to a ping."""
+        if (not self.write(protocol.PING))
+        or (self.read(timeout) != protocol.OK):
+            return False
+        return True
 
 
     def __del__(self):
