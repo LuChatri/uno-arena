@@ -16,12 +16,13 @@ class ReversibleCycle:
         self._seq = seq
         self._index = 0
         self._step = 1
+        self._len = len(self._seq)
 
 
     def reverse(self):
         """Switch the direction of iteration."""
         self._step = -1*self._step
-        self._index = len(self._seq)-self._index+1
+        self._index = self._len-self._index
 
 
     def __iter__(self):
@@ -36,3 +37,4 @@ class ReversibleCycle:
             return self._seq[0]
         finally:
             self._index += self._step
+            self._index %= self._len
