@@ -22,18 +22,19 @@ NEWGAME = 'NEWGAME players {n_players}\n'
 # Cards are strings formatted as follows:
 #   "Normal" cards are two characters: a value 0-9 or S for skip, R
 #   for reverse, or D for draw two, followed by a color in RGBY.
-#   Wild cards are W.  After they are played, a color as appended to them.
-#   Wild draw four cards are WD.  After they are played, a color is appended
+#   Wild cards are WD0.  After they are played, a color as appended to them.
+#   Wild draw four cards are WD4.  After they are played, a color is appended
 #   to them.
 # Moves are then given as follows:
-#   At the start of the game or when the discard pile is reshuffled,
-#   the move is written as SHUFFLE.
-#   After the first SHUFFLE, the top card is turned over.  It is written in
-#   the standard card format.
+#   After the first shuffle, the top card is turned over.  It is written in
+#   the standard card format.  All shuffles are implied when the deck runs
+#   out of cards, including in the middle of a draw.
 #   When a card is played, it is written in the standard card format.
-#   When a player renegs, it is written as RENEG.
+#   When a player renegs, it is written as RENEG.  If the engine renegged,
+#   the next token will be the card it drew.
 #   When a player draws but does not reneg, it is written as DRAW {n} where n
-#   is the number of cards drawn.
+#   is the number of cards drawn.  If the engine drew, the next n tokens will
+#   be the cards it drew.
 #   When a WD is challenged, successful challenges are written as CS and
 #   failed challenges are written as CF
 #   There is no way to declare UNO because declaring UNO is trivial
