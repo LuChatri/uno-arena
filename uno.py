@@ -3,284 +3,160 @@
 # I don't want to code Uno logic myself, so I'm using open source code released
 # under the MIT license by UnlikeSuika.
 
-
-from enum import Enum
-import random
 from random import shuffle
 
 
-class CardColor(Enum):
-    """Enumeration of colors of UNO cards."""
-    RED = 1
-    YELLOW = 2
-    GREEN = 3
-    BLUE = 4
-    BLACK = 5
+def equal(c1: str, c2: str) -> bool:
+    """Compare the color and value of two cards."""
+    return c1 == c2
 
 
-class CardType(Enum):
-    """Enumeration of types of UNO cards."""
-    ZERO = 0
-    ONE = 1
-    TWO = 2
-    THREE = 3
-    FOUR = 4
-    FIVE = 5
-    SIX = 6
-    SEVEN = 7
-    EIGHT = 8
-    NINE = 9
-    SKIP = 10
-    REVERSE = 11
-    DRAW_TWO = 12
-    WILD = 13
-    WILD_DRAW_FOUR = 14
+def equal_color(c1: str, c2: str) -> bool:
+    """Compare the color of two cards."""
+    return c1[1] == c2[1]
 
 
-class Card:
-    """An Uno card.
+def equal_type(c1: str, c2: str) -> bool:
+    """Compare the type of two cards."""
+    if c1[0] == 'W' or c2[0] == 'W':
+        return c1[:3] == c2[:3]
+    return c1[0] == c2[0]
+
+
+class Player(Engine):
+    """Child class for adding Uno functionality to an engine.
 
     Args:
-        color (int 1-5): Card color.  See the enum CardColor.
-        type (int 0-14): Card type.  See the enum CardType.
+        hand (list): initial hand for the player
     """
 
-
-    def __init__(self, color: int, type: int):
-        self.color = color
-        self.type = type
-
-
-    def equal(self, card: Card) -> bool:
-        """Compare the color and value of two cards."""
-        return self.color == card.color and self.type == card.type
+    def __init__(self, *args, hand: list=[], **kwargs):
+        super().__init__(*args, **kwargs)
+        self.hand = hand
 
 
-    def equal_color(self, card: Card) -> bool:
-        """Compare the color of two cards."""
-        return self.color == card.color
+    def add_card(self, card: str):
+        """Add `card` to the player's hand."""
+        self.hand.append(card)
 
 
-    def equal_type(self, card: Card) -> bool:
-        """Compare the type of two cards."""
-        return self.type == card.type
+    def remove_card(self, card: str):
+        """Remove exactly one of `card` from the player's hand."""
+        self.hand.remove(card)
 
 
-    def __str__(self):
-        """Returns string representation of the card.
-
-        Note:
-            Follows the format used in protocol.py.
-        """
-        # The space  HERE is important--black cards have no color.
-        color = 'RYGB '[self.color].strip()
-        type = '0123456789SRDWI'[self.type]
-        return type+color
+    def reset_hand(self):
+        """Empty the player's hand."""
+        self.hand = []
 
 
-class Player:
-    """
-    An UNO player.
-    Attributes:
-    cards(list of Card): UNO cards in hand
-    score(int):          Score accumulated during the set of UNO games
-    """
-    def __init__(self):
-        """Constructor of the player."""
-        self.cards = []
-        self.score = 0
-
-    def receive_card(self, card):
-        """
-        Adds 'card' to the player's hand.
-        Argument:
-        card(Card)
-        """
-        self.cards.append(card)
-
-    def discard_card(self, index):
-        """
-        Gets rid of player's card with given index.
-        Argument:
-        index(int)
-        """
-        del(self.cards[index])
-
-    def print_cards(self):
-        """Prints all cards the player has in hand."""
-        index = 1
-        for card in self.cards:
-            print(str(index) + "." + str(card), end="  ")
-            index += 1
-        print()
-
-    def get_cards(self):
-        """
-        Returns the list of cards the player has.
-        
-        Return: list of cards
-        """
-        return self.cards
-
-    def shuffle_cards(self):
-        """Shuffles the cards in hand."""
-        shuffle(self.cards)
-
-    def add_score(self, score):
-        """
-        Adds to the player's current score.
-        Argument:
-        score(int)
-        """
-        self.score += score
-
-    def get_score(self):
-        """
-        Returns the player's current score.
-        Return:
-        int
-        """
-        return self.score
-
-    def reset_cards(self):
-        """Empties the player's current hand."""
-        self.cards = []
-
-    def sort_cards(self):
-        """Sorts the player's current cards."""
-        self.cards = sorted(self.cards, key=Card.get_compare_key)
+    def can_play_on(self, card: str) -> list:
+        """Returns list of held cards playable on `card.`"""
+        return [c for c in self.hand if (equal_color(c, card) or equal_type(c, card))]
 
 
-class Game:
-    """
-    A single UNO game.
-    Attributes:
-    players     (list of Player): Players playing the game
-    deck        (list of Card)  : Cards on deck
-    discard     (list of Card)  : Pile of discarded cards
-    wild_color  (CardColor)     : Color called upon playing wild card, or
-                                  Black if no wild card is played
-    winner_index(int)           : Index of the player who win the match, or
-                                  -1 if the game has not ended yet
-    clockwise   (bool)          : Whether to proceed to next turn in clockwise
-                                  order. if false, then the order is
-                                  counterclockwise.
-    turn        (int)           : Index of the player who has the current turn
-    """
+
+class UnoGame:
+    
     def __init__(self, players):
-        """
-        Constructor of Game.
-        Argument:
-        players(list of Player)
-        """
         self.players = players
         self.deck = []
         self.discard = []
-        self.wild_color = CardColor["BLACK"]
-        self.winner_index = -1
-        self.clockwise = True
-        self.turn = 1
-        self.__init_deck__()
-        # Distribute seven cards to every player
+        self.cycle = ReversibleCycle(players)
+
+
+    def new_deck(self, randomize=True):
+        """Makes a standard Uno deck.
+
+        Args:
+            shuffle (bool): Whether to randomize the deck (default: True)
+        """
+        deck = ['WD0', 'WD4']*4
+        values = '0'+2*'123456789'+'SRD'
+        for color in 'RGBY':
+            deck.extend([v+color for v in vals])
+
+        if randomize:
+            shuffle(deck)
+        return deck
+
+
+    def start(self):
+        self.deck = self.new_deck(randomize=True)
+
+        # Turn over the top card
+        c = self.draw_card(exclude_wild=True)
+        self.discard.append(c)
+        
+        if equal_type(c, 'S'):
+            # Skip the next player
+            next(self.cycle)
+        elif equal_type(c, 'R'):
+            # Flip the direction of play
+            self.cycle.reverse()
+
+        # Deal cards to each player
         for player in self.players:
-            player.reset_cards()
-            for time in range(7):
-                self.__give_topdeck_to_player__(player)
-            player.sort_cards()
-        # Discard a card from the top of the deck
-        self.__discard_topdeck__()
-        # If the discarded card is Wild Draw Four, shuffle and discard again
-        while self.discard[-1].equals(Card(CardColor["BLACK"],
-                                           CardType["WILD_DRAW_FOUR"])):
-            self.deck.append(self.discard[-1])
-            del(self.discard[-1])
-            self.__shuffle_deck__()
-            self.__discard_topdeck__()
-        # Cases where the first discard is an action card
-        if self.discard[-1].get_type() == CardType["SKIP"]:
-            self.__next_turn__()
-        elif self.discard[-1].get_type() == CardType["DRAW_TWO"]:
-            self.__give_topdeck_to_player__(self.players[self.turn])
-            self.__give_topdeck_to_player__(self.players[self.turn])
-            self.players[self.turn].sort_cards()
-            self.__next_turn__()
-        elif self.discard[-1].get_type() == CardType["REVERSE"]:
-            self.clockwise = False
-            self.__next_turn__()
-        elif self.discard[-1].get_type() == CardType["WILD"]:
-            print("Discarded card is a wild card. Choose a color by \".<first "
-                  + "letter of color>\" format (without quotations).")
-            called_color = input().lower()
-            while called_color not in [".r", ".y", ".g", ".b"]:
-                print("Invalid input. Choose one from \".r\", \".y\", \".g\", "
-                      + "and \".b\" (without quotations).")
-                called_color = input().lower()
-            i = [".r", ".y", ".g", ".b"].index(called_color)
-            self.wild_color = CardColor(i+1)
+            player.reset_hand()
+            for i in range(7):
+                player.add_card(self.draw_card())
 
-    def __init_deck__(self):
-        """Fill the deck with a full deck of UNO cards."""
-        # Add the colored cards
-        for color in range(1, 5):
-            self.deck.append(Card(CardColor(color), CardType["ZERO"]))
-            for type in range(1, 13):
-                for time in range(2):
-                    self.deck.append(Card(CardColor(color), CardType(type)))
-        # Add Wild cards and Wild Draw Four cards
-        for time in range(4):
-            self.deck.append(Card(CardColor["BLACK"], CardType["WILD"]))
-            self.deck.append(Card(CardColor["BLACK"],
-                                  CardType["WILD_DRAW_FOUR"]))
-        self.__shuffle_deck__()
 
-    def __shuffle_deck__(self):
-        """Shuffles the current deck"""
-        shuffle(self.deck)
+    def play_turn(self):
+        top_card = self.discard[-1]
+        player = next(self.cycle)
 
-    def __give_topdeck_to_player__(self, player):
-        """
-        Adds the top card from the deck to player's hand.
-        Argument:
-        player(Player): The player receiving the topdeck
-        """
-        # Move discarded cards to the deck if the deck is empty
+        move = player.get_best_move()
+
+        if move == protocol.RENEG:
+            player.add_card(self.draw_card())
+            return
+
+        elif move == protocol.CHALLENGE:
+            if not self.can_challenge:
+                raise ValueError('Challenging is not allowed right now.')
+            # Check if the challenge succeeded
+            ind = self.players.index(player)-1
+            last_p = self.players[ind]
+            last_c = self.discard[-2]
+            if last_p.can_play_on(last_c):
+                # The last player could have played, so the challenge succeeds.
+                pass
+            else:
+                # Otherise, it fails.
+            return
+
+        elif move == protocol.DRAW:
+            pass
+
+        elif move:
+            # Playing a card.
+            if player.can_play_on(top_card)
+
+        # The discard list only ever has two cards:
+        # the most recent discard and the second most recent discard.
+        # No more is needed.
+        if len(self.discard_list) >= 2:
+            self.discard_list = [self.discard_list[-1], top_card]
+
+
+    def draw_card(self, exclude_wild=False):
         if not self.deck:
-            self.deck = self.discard[:-1]
-            self.__shuffle_deck__()
-            self.discard = [self.discard[-1]]
-            # Ran out of cards from deck/discard, so player can't draw
-            if not self.deck:
-                print("Deck is empty. Player could not draw.")
-                return False
-        player.receive_card(self.deck[-1])
-        del(self.deck[-1])
-        return True
+            self.deck = self.new_deck(randomize=True)
+            self.deck.remove(self.top_card)
 
-    def __discard_topdeck__(self):
-        """Discard the top card from the deck."""
-        self.discard.append(self.deck[-1])
-        del(self.deck[-1])
-
-    def __discard_player_card__(self, player, card_index):
-        """
-        Discard the player's card with the given index.
-        Argument:
-        player    (Player): The player from whom the card is to be discarded
-        card_index(int)   : The index of the card to discard
-        """
-        self.discard.append(player.get_cards()[card_index])
-        player.discard_card(card_index)
-
-    def __next_turn__(self):
-        """Proceed to the next player's turn."""
-        if self.clockwise:
-            self.turn += 1
-            if self.turn >= len(self.players):
-                self.turn -= len(self.players)
+        if exclude_wild:
+            for count, card in enumerate(deck):
+                if c[:2] != 'WD':
+                    return self.deck.pop(count)
         else:
-            self.turn -= 1
-            if self.turn < 0:
-                self.turn += len(self.players)
+            return self.deck.pop(0)
+
+
+    def end_game(self): pass
+
+
+
 
     def __can_be_played__(self, card):
         """
