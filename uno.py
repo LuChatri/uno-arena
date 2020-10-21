@@ -38,133 +38,45 @@ class CardType(Enum):
 
 
 class Card:
+    """An Uno card.
+
+    Args:
+        color (int 1-5): Card color.  See the enum CardColor.
+        type (int 0-14): Card type.  See the enum CardType.
     """
-    An UNO card.
-    Attributes:
-    color(CardColor)
-    type (CardType)
-    """
-    def __init__(self, color, type):
-        """
-        Constructor of the card.
-        Arguments:
-        color(CardColor)
-        type (CardType)
-        """
+
+
+    def __init__(self, color: int, type: int):
         self.color = color
         self.type = type
 
-    def __str__(self):
-        """String representation of the card.
-        Return:
-        String
-        """
-        s = ""
-        # Add the color of the card
-        if self.color == CardColor["RED"]:
-            s += "[R]"
-        elif self.color == CardColor["YELLOW"]:
-            s += "[Y]"
-        elif self.color == CardColor["GREEN"]:
-            s += "[G]"
-        elif self.color == CardColor["BLUE"]:
-            s += "[B]"
-        # Add the type of the card
-        if self.type == CardType["ZERO"]:
-            s += "(0)"
-        elif self.type == CardType["ONE"]:
-            s += "(1)"
-        elif self.type == CardType["TWO"]:
-            s += "(2)"
-        elif self.type == CardType["THREE"]:
-            s += "(3)"
-        elif self.type == CardType["FOUR"]:
-            s += "(4)"
-        elif self.type == CardType["FIVE"]:
-            s += "(5)"
-        elif self.type == CardType["SIX"]:
-            s += "(6)"
-        elif self.type == CardType["SEVEN"]:
-            s += "(7)"
-        elif self.type == CardType["EIGHT"]:
-            s += "(8)"
-        elif self.type == CardType["NINE"]:
-            s += "(9)"
-        elif self.type == CardType["SKIP"]:
-            s += "(S)"
-        elif self.type == CardType["REVERSE"]:
-            s += "(R)"
-        elif self.type == CardType["DRAW_TWO"]:
-            s += "(D2)"
-        elif self.type == CardType["WILD"]:
-            s += "[W]"
-        else:
-            s += "[WD4]"
-        return s
 
-    def __repr__(self):
-        """
-        Repr representation of the card.
-        Return:
-        String
-        """
-        return self.__str__()
-            
-    def equals(self, card):
-        """
-        Determines if self is the same card as 'card'
-        Argument:
-        card(Card): card for comparing
-        
-        Return:
-        bool
-        """
-        return (self.color == card.color and self.type == card.type)
+    def equal(self, card: Card) -> bool:
+        """Compare the color and value of two cards."""
+        return self.color == card.color and self.type == card.type
 
-    def equals_color(self, card):
-        """
-        Determines if self has the same color as 'card'
-        Argument:
-        card(Card): card for comparing
-        Return:
-        bool
-        """
+
+    def equal_color(self, card: Card) -> bool:
+        """Compare the color of two cards."""
         return self.color == card.color
 
-    def equals_type(self, card):
-        """
-        Determines if self has same type as 'card'
-        Argument:
-        card(Card): card for comparing
-        Return:
-        bool
-        """
+
+    def equal_type(self, card: Card) -> bool:
+        """Compare the type of two cards."""
         return self.type == card.type
 
-    def get_color(self):
-        """
-        Returns the color
-        Return:
-        CardColor
-        """
-        return self.color
 
-    def get_type(self):
-        """
-        Returns the type
-        Return:
-        CardType
-        """
-        return self.type
+    def __str__(self):
+        """Returns string representation of the card.
 
-    def get_compare_key(self):
+        Note:
+            Follows the format used in protocol.py.
         """
-        Returns the key for comparing multiple cards
-        Return:
-        int
-        """
-        return self.color.value * 100 + self.type.value
-        
+        # The space  HERE is important--black cards have no color.
+        color = 'RYGB '[self.color].strip()
+        type = '0123456789SRDWI'[self.type]
+        return type+color
+
 
 class Player:
     """
