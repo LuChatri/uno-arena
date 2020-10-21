@@ -110,7 +110,6 @@ class UnoGame:
 
         if move == protocol.RENEG:
             player.add_card(self.draw_card())
-            return
 
         elif move == protocol.CHALLENGE:
             if not self.can_challenge:
@@ -124,20 +123,29 @@ class UnoGame:
                 pass
             else:
                 # Otherise, it fails.
-            return
 
         elif move == protocol.DRAW:
             pass
 
-        elif move:
+        else:
             # Playing a card.
-            if player.can_play_on(top_card)
+            if move not in player.can_play_on(top_card):
+                raise ValueError('Invalid move: {}'.format(move))
 
-        # The discard list only ever has two cards:
-        # the most recent discard and the second most recent discard.
-        # No more is needed.
-        if len(self.discard_list) >= 2:
-            self.discard_list = [self.discard_list[-1], top_card]
+            if equal_type(move, 'S'):
+                pass
+            elif equal_type(move, 'D'):
+                pass
+            elif equal_type(move, 'WD0'):
+                pass
+
+        next(self.cycle)
+
+##        # The discard list only ever has two cards:
+##        # the most recent discard and the second most recent discard.
+##        # No more is needed.
+##        if len(self.discard_list) >= 2:
+##            self.discard_list = [self.discard_list[-2], top_card]
 
 
     def draw_card(self, exclude_wild=False):
