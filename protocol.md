@@ -37,5 +37,5 @@ In alphabetical order.
   - Ex: `move WR` means play a wild and change the color to red.  `move R5` means play a red five.  `move draw` means draw one card from the deck.
 - `ready` - The engine should send this to Uno Arena to signal that the engine has booted and can receive information about the game state.
 - `shutdown` - Uno Arena should send this to the engine to signal the engine to shut down immediately.  No further communication should be expected from Uno Arena.
-- `shuttingdown` - The engine should send this to Uno Arena after receiving a `shutdown` command to signal that it is shutting down now.
+- `shuttingdown` - The engine should send this to Uno Arena after receiving a `shutdown` command to signal that it has shut down and that its process can be terminated.  If the engine has not shut down thirty seconds after the `shutdown` command, it will be force stopped.
 - `stop` - Uno Arena should send this to the engine to signal the engine to stop calculating.
