@@ -2,10 +2,10 @@
 '''This module provides constants and parsing utility for Universal Uno Interface communication'''
 
 BOOTING = 'booting'
-ERROR = 'error {message}'
-GAMESTATE = 'gamestate {game_info}'
+ERROR = 'error'
+GAMESTATE = 'gamestate'
 GO = 'go'
-MOVE = 'move {move_info}'
+MOVE = 'move'
 READY = 'ready'
 SHUTDOWN = 'shutdown'
 SHUTTINGDOWN = 'shuttingdown'
