@@ -53,8 +53,6 @@ class Engine:
                 if msg is False:
                     self.force_stop()
                     break
-                else:
-                    msg = msg.lower().split(' ')
                 
                 if msg[0] == protocol.SHUTTINGDOWN:
                     self.force_stop()
@@ -87,7 +85,8 @@ class Engine:
         """
         if self.is_alive():
             try:
-                return self._reader.read(timeout)
+                msg = self._reader.read(timeout)
+                return msg.lower.split()
             except Empty:
                 return ''
         return False
