@@ -15,21 +15,22 @@ This document outlines the Universal Uno Interface protocol, which is used by th
 In alphabetical order.
 - `booting` - The engine should send this to Uno Arena immediately upon initialization to signal that it is starting up.
 - `error` -  The engine send this to Uno Arena after encountering a fatal error. Uno Arena will no longer communicate with the engine or respond to its communications.  Full syntax:
-  - `<error> := error <msg>`
+  - `<error> := error <error-message>`
 - `gamestate` - Uno Arena should send this to the engine to set the engine's internal game state.  `gamestate` is the most complicated command in this specification.  Full syntax:
   - `gamestate := gamestate <number-players> <points> <top-card>  <move>*`
-  - `<points> := <number>{number-players}`
+  - `<number-players> := <number>
   - `<number> := [0-9]+`
+  - `<points> := <number>{number-players}`
   - `<top-card> := <card>`
-  - `<move> := challenge | draw (<card>* | <number>) | renege | <card>`
   - `<card> := W <color> | WD4 <color> | <color><type>`
   - `<color> := R | G | B | Y`
   - `<type> := [0-9] | R | S | D2`
+  - `<move> := challenge | draw (<card>* | <number>) | renege | <card>`
   - More clarification might be helpful here.  After the number of players, we list the points for each player.  Then, we give the first card turned over from the deck.  Then, we list moves.  The first moves listed will always be draws since each player must take turns building up their hands.  When the engine draws, the `draw` parameter tells what card(s) it drew.  When another player draws, only the number of cards they drew is given.  Notice that the player who makes each move is not given since the game flow is unambiguous given this command's syntax and the rules of Uno.
 - `go` - Uno Arena should send this to the engine to signal the engine to start calculating from its internal game state.
 - `move` - The engine should send this to Uno Arena after receiving a `stop` command to signal the move it would play based on the game state.  In the event that an illegal move is sent, fail. Full syntax:
-  - `<move> := move <move-description>`
-  - `<move-description> := challenge | draw | renege | <card>`
+  - `<move> := move <move-info>`
+  - `<move-info> := challenge | draw | renege | <card>`
   - `<card> := W<color> | WD4<color> | <color><type>`
   - `<color> := R | G | B | Y`
   - `<type> := [0-9] | R | S | D2`
