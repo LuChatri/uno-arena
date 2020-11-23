@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import protocol
-from engine import Engine
 from argparse import ArgumentParser
 from cmd import Cmd
+from time import time
 
 
 class UnoInterface(Cmd):
@@ -17,26 +17,31 @@ class UnoInterface(Cmd):
         self.engines = []
         
         self._load_parser = ArgumentParser(description=self.do_load.__doc__, prog='load')
-        self._load_parser.add_argument('command', help='Command to instantiate the engine.')
-        self._load_parser.add_argument('-n', '--name', help='Name for the engine instance.')
-        self._load_parser.add_argument('-t', '--timeout', help='Max time to wait for boot up.', type=float, default=5)
+        self._load_parser.add_argument('command',
+                                       help='Command to initialize the engine.')
+        self._load_parser.add_argument('-n', '--name',
+                                       help='Name for the engine instance.')
+        self._load_parser.add_argument('-t', '--timeout',
+                                       help='Max time to wait for boot up.',
+                                       default=5,
+                                       type=float)
 
         self._config_parser = ArgumentParser(description=self.do_config.__doc__, prog='config')
 
         self._unload_parser = ArgumentParser(description=self.do_unload.__doc__, prog='unload')
-        self._unload_parser.add_argument('-n', '--name', help='Name for the instance to unload.')
-        self._unload_parser.add_argument('-t', '--timeout', help='Max time to wait for shutdown', type=float, default=5)
+        self._unload_parser.add_argument('-n', '--name',
+                                         help='Name for the instance to unload.')
 
-        self._tournament_parser = ArgumentParser(description=self.do_tournament.__doc__, prog='tournament')
+        self._game_parser = ArgumentParser(description=self.do_game.__doc__, prog='game')
 
 
     def do_load(self, arg):
-        """Add an engine instance for the next tournament.
+        """Add an engine instance for the next game.
 
         Command Line Example: load "python3 engine.py --no-gui" myengine
         """
         if len(self.engines) >= 15:
-            print('There must be 2-15 players')
+            print('There must fewer than 15 players')
             return
         
         try:
@@ -45,11 +50,29 @@ class UnoInterface(Cmd):
             return
 
         e = Engine(args.name, args.command)
-        if e.ping(args.timeout):
-            self.engines.append(e)
-        else:
-            print('Cannot start {}'.format(args.name))
-            e.stop()
+        t = time()
+
+        while True:
+            elapsed = time() - t
+            timeout = args.timeout - elapsed
+
+            if timeout < 0:
+                print(f'Could not start {args.name}.  Shutting down...')
+                e.stop()
+                break
+
+            msg = e.read(timeout)
+            if msg[0] == protocol.BOOTING:
+                print(f'{args.name} is booting...')
+            elif msg[0] == protocol.ERROR:
+                print(msg)
+                print(f'Could not start {args.name}.  Shutting down...')
+                e.force_stop()
+                break
+            elif msg[0] == protocol.READY:
+                print(f'{args.name} booted successfully')
+                self.engines.append(e)
+                break
         
 
     def do_config(self, arg):
@@ -77,12 +100,24 @@ class UnoInterface(Cmd):
             print('Cannot find {}'.format(args.name))
 
 
-    def do_tournament(self, arg):
-        """Simulate a tournament between all loaded engine instances."""
+    def do_game(self, arg):
+        """Simulate a game between all loaded engine instances."""
         if not 2 <= len(self.engines) <= 15:
             print('There must be 2-15 players')
             return
-        # Begin game logic here
+
+        try:
+            args = self._game_parser(arg.split())
+        except SystemExit:
+            return
+
+        # Send New Game notification
+        num_engines = len(self.engines)
+        for e in self.engines:
+            e.new_game(num_engines)
+
+        # Start the game loop.
+        simulate_game(self.engines)
 
 
     def do_quit(self):
@@ -96,7 +131,7 @@ class UnoInterface(Cmd):
     def help_load(self): self._load_parser.print_help()
     def help_config(self): self._config_parser.print_help()
     def help_unload(self): self._unload_parser.print_help()
-    def help_tournament(self): self._tournament_parser.print_help()
+    def help_game(self): self._game_parser.print_help()
     def help_quit(self): print(self.do_quit.__doc__)
 
 
