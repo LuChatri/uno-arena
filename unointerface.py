@@ -90,14 +90,15 @@ class UnoInterface(Cmd):
         except SystemExit:
             return
 
+        name = args.name
         for e in self.engines:
-            if e.name == args.name:
-                print('Stopping {}'.format(e.name))
+            if e.name == name:
+                print(f'Stopping {name}')
                 e.stop()
                 self.engines.remove(e)
                 break
         else:
-            print('Cannot find {}'.format(args.name))
+            print(f'Cannot find {name}')
 
 
     def do_game(self, arg):
@@ -123,7 +124,7 @@ class UnoInterface(Cmd):
     def do_quit(self):
         """Stop engines and exit the shell."""
         for e in self.engines:
-            print('Stopping {}'.format(e.name))
+            print(f'Stopping {e.name}')
             e.stop()
         self.close()
 
