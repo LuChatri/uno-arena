@@ -4,7 +4,7 @@ import protocol
 from threadedstreamreader import ThreadedStreamReader
 from queue import Empty
 from subprocess import Popen, PIPE
-from time import sleep
+from time import time
 
 
 class Engine:
@@ -20,8 +20,12 @@ class Engine:
 
     def __init__(self, name, command: str):
         self.name = name
-        self._process = subprocess.Popen(args.command, shell=True,
-                                        stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        self.command = command
+        self._process = subprocess.Popen(self.command,
+                                         shell=True,
+                                         stdin=PIPE,
+                                         stdout=PIPE,
+                                         stderr=PIPE)
         self._reader = ThreadedStreamReader(self.process.stdout)
         self._reader.start()
 
@@ -31,34 +35,43 @@ class Engine:
         return self._process.poll() is None
 
 
-    def stop(self, timeout=5: float):
-        """Shut the engine down.
+    def stop(self):
+        """Shut the engine down nicely."""
+        if self.is_alive():
+            self._process.write(protocol.SHUTDOWN + '\n')
+            t = time()
+            
+            while True:
+                elapsed = time() - t
+                timeout = protocol.SHUTDOWN_TIMEOUT - elapsed
+                if timeout < 0:
+                    self.force_stop()
+                    break
 
-        Args:
-            timeout (float): max time to block for safe shutdown
-        """
-        if self.is_alive()
-            self.write(protocol.SHUTDOWN)
-            # Give the engine time for a safe shutdown
-            self.read(timeout=timeout)
-            # Clean up the process forcefully
+                msg = self._reader(timeout)
+
+                if msg is False:
+                    self.force_stop()
+                    break
+                else:
+                    msg = msg.lower().split(' ')
+                
+                if msg[0] == protocol.SHUTTINGDOWN:
+                    self.force_stop()
+                    break
+                elif msg[0] == protocol.ERROR:
+                    self.force_stop()
+                    print(msg)
+                    break
+
+
+    def force_stop(self):
+        """Forcibly shut the engine down."""
+        if not self.is_alive()
             self._process.kill()
 
         if self._reader.is_alive():
             self._reader.join()
-
-
-    def write(self, msg) -> bool:
-        """Write a message to the engine.
-
-        Note:
-            Returns True if the write was successful and False or an exception
-            otherwise.
-        """
-        if self.is_alive():
-            self._process.write(msg)
-            return True
-        return False
 
 
     def read(self, timeout=None: float):
@@ -80,15 +93,13 @@ class Engine:
         return False
 
 
-    def ping(self, timeout=None) -> bool:
-        """Check that the engine responds OK to a ping."""
-        if (not self.write(protocol.PING))
-        or (self.read(timeout) != protocol.OK):
-            return False
-        return True
+    def write(self, msg):
+        """Write a message to the engine."""
+        if self.is_alive():
+            self._process.write(msg)
 
 
     def __del__(self):
         # Do cleanup
-        self.finish()
+        self.force_stop()
         super().__del__()
