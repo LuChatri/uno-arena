@@ -38,7 +38,7 @@ class Engine:
     def stop(self):
         """Shut the engine down nicely."""
         if self.is_alive():
-            self._process.write(protocol.SHUTDOWN + '\n')
+            self._process.write(protocol.SHUTDOWN)
             t = time()
             
             while True:
@@ -85,7 +85,7 @@ class Engine:
         """
         if self.is_alive():
             try:
-                msg = self._reader.read(timeout)
+                msg = self._reader.read(timeout).strip()
                 return msg.lower.split()
             except Empty:
                 return ''
@@ -95,7 +95,7 @@ class Engine:
     def write(self, msg):
         """Write a message to the engine."""
         if self.is_alive():
-            self._process.write(msg)
+            self._process.write(msg + '\n')
 
 
     def __del__(self):
