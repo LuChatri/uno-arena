@@ -85,8 +85,10 @@ class Engine:
         """
         if self.is_alive():
             try:
-                msg = self._reader.read(timeout).strip()
-                return msg.lower.split()
+                msg = self._reader.read(timeout).strip().lower().split(' ')
+                if msg[0] == protocol.ERROR:
+                    print(f'Error from {self._process}: {msg}')
+                return msg
             except Empty:
                 return ''
         return False
