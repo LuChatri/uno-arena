@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
-'''This module provides constants and parsing utility for Universal Uno Interface communication'''
+'''This module provides constants for Universal Uno Interface communicatio.n'''
 
 BOOTING = 'booting'
 ERROR = 'error'
-GAMESTATE = 'gamestate'
 GO = 'go'
 MOVE = 'move'
+NEWGAME = 'newgame'
+NEWMOVES = 'newmoves'
 READY = 'ready'
 SHUTDOWN = 'shutdown'
 SHUTTINGDOWN = 'shuttingdown'
