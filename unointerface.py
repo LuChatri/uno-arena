@@ -65,7 +65,6 @@ class UnoInterface(Cmd):
             if msg[0] == protocol.BOOTING:
                 print(f'{args.name} is booting...')
             elif msg[0] == protocol.ERROR:
-                print(msg)
                 print(f'Could not start {args.name}.  Shutting down...')
                 e.force_stop()
                 break
@@ -107,18 +106,7 @@ class UnoInterface(Cmd):
             print('There must be 2-15 players')
             return
 
-        try:
-            args = self._game_parser(arg.split())
-        except SystemExit:
-            return
-
-        # Send New Game notification
-        num_engines = len(self.engines)
-        for e in self.engines:
-            e.new_game(num_engines)
-
-        # Start the game loop.
-        simulate_game(self.engines)
+        # Code for game goes here.
 
 
     def do_quit(self):
