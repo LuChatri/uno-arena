@@ -17,7 +17,7 @@ In alphabetical order.
 - `error` -  The engine send this to Uno Arena after encountering a fatal error. Uno Arena will no longer communicate with the engine or respond to its communications.  Full syntax:
   - `<error> := error <error-message>`
 - `go` - Uno Arena should send this to the engine to signal the engine to start calculating from its internal game state.
-- `move` - The engine should send this to Uno Arena after receiving a `stop` command to signal the move it would play based on the game state.  In the event that an illegal move is sent, fail. Full syntax:
+- `move` - The engine should send this to Uno Arena after receiving a `stop` command to signal the move it would play based on the game state.  In the event that an illegal move is sent, Uno Arena will ignore it. Full syntax:
   - `<move> := move <move-info>`
   - `<move-info> := challenge | draw | renege | <card>`
   - `<card> := W<color> | WD4<color> | <type><color>`
@@ -25,10 +25,8 @@ In alphabetical order.
   - `<type> := [0-9] | R | S | D2`
   - Ex: `move WR` means play a wild and change the color to red.  `move 5R` means play a red five.  `move draw` means draw one card from the deck.
 - `newgame` - Uno Arena should send this to the engine to signal the engine to reset its internal game sttate.  Full syntax:
-  - `<newgame> := newgame <number-players> <points> <top-card> ``
-  - `<number-players> := <number>
-  - `<number> := [0-9]+`
-  - `<points> := <number>{number-players}`
+  - `<newgame> := newgame <number-players> <top-card> ``
+  - `<number-players> := [0-9]+
   - `<top-card> := <card>`
   - `<card> := W<color> | WD4<color> | <type><color>`
   - `<color> := R | G | B | Y`
