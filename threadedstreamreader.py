@@ -40,3 +40,4 @@ class ThreadedStreamReader(Thread):
             timeout (float): time to block for next line.
         """
         return self._queue.get(block=timeout is not None, timeout=timeout)
+
