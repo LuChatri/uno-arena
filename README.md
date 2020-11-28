@@ -9,7 +9,7 @@ I'm making something similar for UNO.
 ## Installation
 To install, clone the repository from the command line.
 
-    git clone https://github.com/LuChatri/uno-arena.git
+    git clone https://github.com/LuChatri/uno-arena
 
 UNO Arena is currently a command line tool only. A GUI version is on my todo list. Change into the installation directory and execute with [Python](https://www.python.org/downloads/).
 
